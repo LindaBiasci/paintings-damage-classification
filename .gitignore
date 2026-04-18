@@ -1,3 +1,4 @@
+### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -205,3 +206,53 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+### MATLAB ###
+# Windows default autosave extension
+*.asv
+
+# OSX / *nix default autosave extension
+*.m~
+
+# Compiled MEX binaries (all platforms)
+*.mex*
+
+# Packaged app and toolbox files
+*.mlappinstall
+*.mltbx
+
+# Generated helpsearch folders
+helpsearch*/
+
+# Simulink code generation folders
+slprj/
+sccprj/
+
+# Matlab code generation folders
+codegen/
+
+# Simulink autosave extension
+*.autosave
+
+# Simulink cache files
+*.slxc
+
+# Octave session info
+octave-workspace
+
+### PROJECT-SPECIFIC EXCLUSIONS ###
+
+# Ignore the dataset directory (including all image files)
+project_dataset/
+!project_dataset/*.csv
+
+# Ignore binary data files (MATLAB) and large model checkpoints (Python)
+*.mat
+*.h5
+*.pth
+*.pkl
+*.sav
+
+# System-specific and temporary files
+.DS_Store
+Thumbs.db
