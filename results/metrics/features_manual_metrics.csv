@@ -1,0 +1,3 @@
+,test_accuracy,test_precision,test_recall,test_f1,test_roc_auc
+SVM,65.38,47.29,66.33,54.7,67.0
+RF,68.51,51.0,29.33,35.37,66.42

@@ -1,0 +1,4 @@
+Original dataset link:
+…
+Link to adjusted dataset, used as input dataset for jpg_converter and so on:
+… /raw/
