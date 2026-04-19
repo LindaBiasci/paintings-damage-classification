@@ -1,4 +1,14 @@
 Original dataset link:
-…
-Link to adjusted dataset, used as input dataset for jpg_converter and so on:
-… /raw/
+
+https://www.kaggle.com/datasets/pes1ug22am047/damaged-and-undamaged-artworks?select=AI_for_Art_Restoration_2
+
+"A collection of images of damaged and undamaged paintings, already classified."
+
+
+
+Link to adjusted dataset, used as input dataset for jpg_converter:
+
+https://drive.google.com/drive/folders/1MHRfAiGpdYqKGSp35vG3KYK0MP-80ScX?usp=sharing
+
+No changes have been made except for renaming images.
+Some images have been removed from the original dataset, as they were duplicates.
