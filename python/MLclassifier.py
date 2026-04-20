@@ -86,15 +86,19 @@ def run_classification(file_path):
 
     # Compute averaged metrics for each model in the dictionary
     results = {
-        name: pd.DataFrame(cross_validate(clf, X, y, cv=cval, scoring=metrics)).mean() 
+        name: pd.DataFrame(cross_validate(clf, X, y, cv=cval, scoring=metrics)) 
         for name, clf in models.items()
     }
     
     plot_roc_curves(models, X, y, cval, script_dir, output_prefix)
 
-    # Create a DataFrame for direct comparison, with metrics expressed as percentages
-    summary = (pd.DataFrame(results).T.drop(columns=['fit_time', 'score_time']))*100
-    summary = summary.round(2)
+    # Create a unique DataFrame for direct comparison, with means and deviations of percentage metrics
+    all_results = pd.concat(results).drop(columns=['fit_time', 'score_time'])
+    summary_mean = all_results.groupby(level=0).mean() * 100
+    summary_std = all_results.groupby(level=0).std() * 100
+    summary = summary_mean.join(summary_std, lsuffix='_mean', rsuffix='_std')
+    summary = summary.sort_index(axis=1).round(2)
+    pd.set_option('display.max_columns', None)
     print("MODEL COMPARISON\n", summary)
     summary.to_csv(script_dir / f"{output_prefix}_metrics.csv")
 
