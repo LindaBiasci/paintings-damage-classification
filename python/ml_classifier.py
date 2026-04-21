@@ -53,7 +53,9 @@ def run_classification(file_path):
     Returns: 
         results (pd.DataFrame): a summary table of each model's performance"""
 
-    script_dir = Path(__file__).resolve().parent
+    output_dir = Path("C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
+    "paintings-damage-classification/results")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Load dataset
     path = Path(file_path)
@@ -79,7 +81,7 @@ def run_classification(file_path):
     }
 
     # Setup cross validation maintaining class proportion across folds and define some metrics
-    cval = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+    cval = StratifiedKFold(n_splits=7, shuffle=True, random_state=42)
     metrics = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc']
 
     # Compute averaged metrics for each model in the dictionary
@@ -88,7 +90,7 @@ def run_classification(file_path):
         for name, clf in models.items()
     }
 
-    roc_path = script_dir / f"{output_prefix}_roc_comparison.png"
+    roc_path = output_dir / f"{output_prefix}_roc_comparison.png"
     plot_roc_curves(models, X, y, cval, roc_path)
 
     # Create a unique DataFrame for comparison, with means and deviations of percentage metrics
@@ -98,8 +100,8 @@ def run_classification(file_path):
     summary = summary_mean.join(summary_std, lsuffix='_mean', rsuffix='_std')
     summary = summary.sort_index(axis=1).round(2)
     pd.set_option('display.max_columns', None)
-    print("MODEL COMPARISON\n", summary)
-    summary.to_csv(script_dir / f"{output_prefix}_metrics.csv")
+    print(f"{output_prefix} MODEL COMPARISON\n", summary)
+    summary.to_csv(output_dir / f"{output_prefix}_metrics.csv")
 
     # Compute predictions to calculate confusion matrix
     predictions = {name: cross_val_predict(clf, X, y, cv=cval)
@@ -116,13 +118,15 @@ def run_classification(file_path):
         axes[i].set_title(f"Confusion Matrix: {name}")
 
     plt.tight_layout()
-    plt.savefig(script_dir / f"{output_prefix}_confusion_matrices.png")
+    plt.savefig(output_dir / f"{output_prefix}_confusion_matrices.png")
     plt.show()
 
     return summary
 
 if __name__ == "__main__":
-    DATA_PATH1 = "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/project_dataset/features_manual.csv"
-    DATA_PATH2 = "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/project_dataset/features_cnn.csv"
+    DATA_PATH1 = "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
+    "paintings-damage-classification/data/extracted_features/features_manual.csv"
+    DATA_PATH2 = "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
+    "paintings-damage-classification/data/extracted_features/features_cnn.csv"
     run_classification(DATA_PATH1)
     run_classification(DATA_PATH2)
