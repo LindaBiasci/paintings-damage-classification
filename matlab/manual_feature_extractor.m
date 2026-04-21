@@ -101,9 +101,10 @@ undam_dir = fullfile(out_path_paired, 'undamaged');
 num_images_p = length(dir(fullfile(dam_dir, '*.jpg')));
 
 feature_names = {'GLCMcontrast', 'GLCMhomogeneity', 'GLCMenergy', ...
-    'GLCMcorrelation', 'Entropy', 'EdgeDensity', 'LaplacianVariance', ...
-    'EnergyRatio', 'SpectralVariance', 'DistanceFromCentroid', ...
-    'MeanR', 'MeanG', 'MeanB', 'StdR', 'StdG', 'StdB', 'SkewR', 'SkewG', 'SkewB'};
+    'GLCMcorrelation', 'GlobalEntropy', 'LBPenergy', 'LBPentropy', ...
+    'EdgeDensity', 'LaplacianVariance', 'EnergyRatio', ...
+    'SpectralVariance', 'DistanceFromCentroid', 'MeanR', 'MeanG', ...
+    'MeanB', 'StdR', 'StdG', 'StdB', 'SkewR', 'SkewG', 'SkewB'};
 
 % Preallocate matrixes to be filled with extracted features
 extfeat_dam = zeros(num_images_p, length(feature_names));
@@ -151,8 +152,7 @@ title('Correlation between difference features (paired images)');
 
 % Features on R, G, B channels are highly correlated as expected, hence
 % their averages can only be retained; moreover, distance from centroid is 
-% extremely correlated to the energy ratio, as expected, and anti-correlated
-% to the spectral variance as well, so it can be neglected
+% extremely correlated to the energy ratio, as expected, so it can be neglected
 Mean_RGB = mean([T_diffs.MeanR, T_diffs.MeanG, T_diffs.MeanB], 2);
 Std_RGB  = mean([T_diffs.StdR,  T_diffs.StdG,  T_diffs.StdB], 2);
 Skew_RGB = mean([T_diffs.SkewR, T_diffs.SkewG, T_diffs.SkewB], 2);
@@ -187,27 +187,30 @@ StatResults = table(feature_names_update', nonGaussian_distr', p_values', ...
 StatResults.Significant_Change = StatResults.relevance_by_p_value < 0.05;
 disp('Statistical analysis of difference features'); disp(StatResults);
 
-% Visualise boxplots of energy ratio and spectral variance, as they are
-% both statistically significant but strongly anti-correlated 
-subplot(1, 2, 1);
-boxplot([T_damaged.EnergyRatio, T_undamaged.EnergyRatio], 'Labels', {'Damaged', 'Undamaged'});
-grid on; title('Energy Ratio'); ylabel('Value');
+% Visualise boxplots of the most statistically significant features:
+% spectral variance and average standard deviation of RGB intensities
 
-subplot(1, 2, 2);
+subplot(1, 2, 1);
 boxplot([T_damaged.SpectralVariance, T_undamaged.SpectralVariance], 'Labels', {'Damaged', 'Undamaged'});
 grid on; title('Spectral Variance'); ylabel('Value');
 
-sgtitle('Discriminative analysis: Energy Ratio vs. Spectral Variance');
+subplot(1, 2, 2);
+boxplot([mean([T_damaged.StdR, T_damaged.StdG, T_damaged.StdB], 2), ...
+         mean([T_undamaged.StdR, T_undamaged.StdG, T_undamaged.StdB], 2)], ...
+         'Labels', {'Damaged', 'Undamaged'});
+grid on; title('RGB Standard Deviation'); ylabel('Value');
+
+sgtitle('Top Diagnostic Features by Statistical Relevance');
 
 %% Feature selection and extraction from unpaired dataset
-% Features to be removed basing on correlation matrix, p-value and
-% boxplots: GCLM contrast, homogeneity and energy (non-significant, 
-% anti-correlated to entropy), laplacian variance (non-significant, 
-% correlated to contrast), energy ratio (sligthly less statistically
-% significant and dynamic than spectral variance)
+% Features to be removed basing on correlation matrix and p-value: 
+% GCLM contrast and homogeneity (non-significant and anti-correlated), GCLM
+% energy (non-significant, anti-correlated to entropy), LBP energy and 
+% laplacian variance (non-significant)
 
-selected_features = {'GLCMcorrelation', 'Entropy', 'EdgeDensity', ...
-    'SpectralVariance', 'Mean_RGB', 'Std_RGB', 'Skew_RGB'};
+selected_features = {'GLCMcorrelation', 'GlobalEntropy', 'LBPentropy', ...
+    'EdgeDensity', 'EnergyRatio', 'SpectralVariance', ...
+    'Mean_RGB', 'Std_RGB', 'Skew_RGB'};
 
 unpaired_dataset = dir(fullfile(out_path_unpaired, '**', '*.jpg'));
 num_images_u = length(unpaired_dataset);
@@ -239,5 +242,6 @@ T_unpaired = vertcat(all_tables{:});
 %% Export data
 % Save the features table as a .csv file for classification
 
-csv_path = fullfile(path, 'features_manual.csv');
+csv_path = fullfile('C:\Users\linda\Desktop\materiali università\magistrale\Computing methods for experimental physics\paintings-damage-classification\data\extracted_features', ...
+    'features_manual.csv');
 writetable(T_unpaired, csv_path);
