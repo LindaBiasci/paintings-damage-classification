@@ -243,8 +243,12 @@ octave-workspace
 ### PROJECT-SPECIFIC EXCLUSIONS ###
 
 # Ignore the dataset directory (including all image files)
-project_dataset/
-!project_dataset/*.csv
+*project_dataset/
+*dataset/
+*images/
+
+# Ignore my results (local)
+results/
 
 # Ignore binary data files (MATLAB) and large model checkpoints (Python)
 *.mat

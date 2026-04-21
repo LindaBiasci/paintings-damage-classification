@@ -9,29 +9,46 @@ function features = extract_features(I)
     % to greyscale to facilitate feature extraction
     mask = any(I>0.01, 3);
     grimg = rgb2gray(I);
+    [rows, cols] = size(grimg);
    
     %%
     % Surface damage detection (texture features): grey-level co-occurency
     % matrix, extraction of contrast, homogeneity, energy, correlation 
-    % (between neighbouring pixels), entropy (degree of texture's disorder)
+    % (between neighbouring pixels); local binary pattern, extraction of 
+    % energy and entropy; global entropy (degree of texture's disorder)
 
     % Considering all spatial directions (respectively, horizontal, right
-    % diagonal, vertical, left diagonal) to compare neighbouring pixels
+    % diagonal, vertical, left diagonal) to compare neighbouring pixels in
+    % GLCM (macroscopic texture features)
     offsets = [0 1; -1 1; -1 0; -1 -1];
     glcm = graycomatrix(grimg, 'Offset', offsets, 'Symmetric', true);
     stats = graycoprops(glcm);
 
+    % Comparing neighbouring pixels in 3x3 squares for LBP statistics
+    % (localised texture features)
+    lbp_histogram = extractLBPFeatures(grimg, 'NumNeighbors', 8, 'Radius', 1);
+    lbp_energy = sum(lbp_histogram.^2);
+    lbp_entropy = -sum(lbp_histogram .* log2(lbp_histogram + eps));
+
     % Compute the average Shannon entropy on pixels' grey levels 
     ShannonEntropy = entropy(grimg(mask)); 
 
-    % Texture features averaged over all four directions
+    % Texture features (GLCM averaged over all four directions)
     text_feat = [mean(stats.Contrast), mean(stats.Homogeneity), ...
-             mean(stats.Energy), mean(stats.Correlation), ShannonEntropy];
+             mean(stats.Energy), mean(stats.Correlation), ...
+             ShannonEntropy, lbp_energy, lbp_entropy];
     
     %%
     % Edge detection: extraction of edge density 
     edges = edge(grimg, 'canny') & mask;
-    edge_density = sum(edges(:)) / sum(mask(:));
+   
+    % Divide images into 4x4 grids and retain the maximum edge density 
+    % among these 16 patches
+    r_size = repmat(rows/4, 1, 4); c_size = repmat(cols/4, 1, 4);
+    e_patches = mat2cell(edges, r_size, c_size);
+    m_patches = mat2cell(mask, r_size, c_size);
+    edge_densities = cellfun(@(e, m) sum(e(:))/sum(m(:)), e_patches, m_patches);
+    edge_density = max(edge_densities(:));
 
     %%
     % Sharpness measurement: filtering and extraction of Laplacian variance
@@ -39,8 +56,11 @@ function features = extract_features(I)
     % Create a high-pass second-order filter
     h = fspecial('laplacian');
     filtered_im = imfilter(grimg, h);
-    lap_values = filtered_im(mask);
-    lap_var = var(double(lap_values(:)));
+    f_patches = mat2cell(filtered_im, r_size, c_size);
+
+    % Compute maximum Laplacian variance among 16 patches as well
+    lap_variances = cellfun(@(f, m) var(double(f(m))), f_patches, m_patches);
+    lap_var = max(lap_variances(:));
 
     %%
     % Frequency-domain analyses with FFT (power spectral features): extraction
@@ -54,7 +74,12 @@ function features = extract_features(I)
     %imagesc(log(1 + abs(F))); axis off;
     %colormap(jet); colorbar; title('FFT spectrum');
     P_log = log10(1 + abs(F).^2); [m,n] = size(P_log);
-    spectral_var_log = var(P_log(:));
+
+    % Compute maximum spectral variance among 16 patches as well
+    getSpecVar = @(g) var(reshape(log10(1 + abs(fftshift(fft2(g))).^2), [], 1));
+    g_patches = mat2cell(grimg, r_size, c_size);
+    spec_vars = cellfun(getSpecVar, g_patches);
+    spectral_var_log = max(spec_vars(:));
 
     % Compute how much spectral power is due to high frequency components
     % (exclude low frequency region, i.e. the central one)
