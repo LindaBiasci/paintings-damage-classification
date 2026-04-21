@@ -8,6 +8,8 @@ from pathlib import Path
 import os
 import numpy as np
 import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 # Required before importing Keras modules
 os.environ["KERAS_BACKEND"] = "torch"
 from keras.applications.resnet50 import ResNet50, preprocess_input
@@ -17,7 +19,8 @@ from keras.utils import load_img, img_to_array
 INPUT_FOLDER = Path(
     "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/project_dataset/processed/unpaired")
 OUTPUT_CSV = Path(
-    "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/project_dataset/features_cnn.csv")
+    "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
+    "paintings-damage-classification/data/extracted_features/features_cnn.csv")
 IMAGE_SIZE = (224, 224)
 LABEL_MAP = {"damaged": 0, "undamaged": 1}
 
@@ -54,10 +57,17 @@ def main():
 
     # Actual feature extraction
     features = model.predict(x)
+    print(f"Original features shape: {features.shape}")
+
+    # Apply dimensionality reduction, since ResNet returns 2048 features for 289 samples
+    scaled_feats = StandardScaler().fit_transform(features)
+    pca = PCA(n_components=50)
+    reduced_feats = pca.fit_transform(scaled_feats)
+    print(f"Reduced features shape: {reduced_feats.shape}")
 
     # Build dataset, i.e. map feature vectors to their correspondent class label
-    df = pd.DataFrame(features).add_prefix("feat_")
-    df["Label"] = [LABEL_MAP[p.parent.name] for p in image_paths]
+    df = pd.DataFrame(reduced_feats).add_prefix("pca_feat")
+    df["Label"] = [LABEL_MAP[p.parent.name] for p in image_paths[:len(reduced_feats)]]
 
     # Check for unmapped labels
     if df["Label"].isnull().any():
