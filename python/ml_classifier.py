@@ -95,10 +95,8 @@ def run_classification(file_path):
 
     # Create a unique DataFrame for comparison, with means and deviations of percentage metrics
     all_results = pd.concat(results).drop(columns=['fit_time', 'score_time'])
-    summary_mean = all_results.groupby(level=0).mean() * 100
-    summary_std = all_results.groupby(level=0).std() * 100
-    summary = summary_mean.join(summary_std, lsuffix='_mean', rsuffix='_std')
-    summary = summary.sort_index(axis=1).round(2)
+    summary = all_results.groupby(level=0).agg(['mean', 'std']) * 100
+    summary = summary.round(2)
     pd.set_option('display.max_columns', None)
     print(f"{output_prefix} MODEL COMPARISON\n", summary)
     summary.to_csv(output_dir / f"{output_prefix}_metrics.csv")
@@ -121,12 +119,22 @@ def run_classification(file_path):
     plt.savefig(output_dir / f"{output_prefix}_confusion_matrices.png")
     plt.show()
 
+# Analyse feature importance in Random Forest
+    if "manual" in output_prefix:
+        rf_model = models["RF"].fit(X, y)
+        importances = rf_model.named_steps['rf'].feature_importances_
+        feat_imp = pd.Series(importances, index=X.columns).sort_values(ascending=True)
+
+        plt.figure(figsize=(10, 6))
+        feat_imp.plot(kind='barh', color='limegreen')
+        plt.title(f"Feature Importance (Random Forest) - {output_prefix}")
+        plt.tight_layout()
+        plt.show()
+
     return summary
 
 if __name__ == "__main__":
-    DATA_PATH1 = "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
-    "paintings-damage-classification/data/extracted_features/features_manual.csv"
-    DATA_PATH2 = "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
-    "paintings-damage-classification/data/extracted_features/features_cnn.csv"
-    run_classification(DATA_PATH1)
-    run_classification(DATA_PATH2)
+    BASE_DIR = Path("C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
+    "paintings-damage-classification/data/extracted_features")
+    run_classification(BASE_DIR / "features_manual.csv")
+    run_classification(BASE_DIR / "features_cnn.csv")
