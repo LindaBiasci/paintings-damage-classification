@@ -1,3 +1,4 @@
-,test_accuracy_mean,test_accuracy_std,test_f1_mean,test_f1_std,test_precision_mean,test_precision_std,test_recall_mean,test_recall_std,test_roc_auc_mean,test_roc_auc_std
-RF,78.56,5.03,48.58,17.2,97.62,6.3,33.91,14.87,88.97,3.68
-SVM,87.54,2.21,77.42,5.54,90.91,6.77,68.45,10.42,93.41,1.78
+,test_accuracy,test_accuracy,test_precision,test_precision,test_recall,test_recall,test_f1,test_f1,test_roc_auc,test_roc_auc
+,mean,std,mean,std,mean,std,mean,std,mean,std
+RF,78.56,5.03,97.62,6.3,33.91,14.87,48.58,17.2,88.97,3.68
+SVM,87.54,2.21,90.91,6.77,68.45,10.42,77.42,5.54,93.41,1.78

@@ -16,9 +16,8 @@ in_path_unpaired = fullfile(path, 'raw', 'unpaired_dataset_art');
 out_path_paired = fullfile(path, 'processed', 'paired');
 out_path_unpaired = fullfile(path, 'processed', 'unpaired');
 
-files_paired = dir(fullfile(in_path_paired, '**', '*.jpg'));
-files_unpaired = dir(fullfile(in_path_unpaired, '**', '*.jpg'));
-files = [files_paired; files_unpaired];
+imds = imageDatastore({in_path_paired, in_path_unpaired}, 'IncludeSubfolders', true, 'FileExtensions', '.jpg');
+files = imds.Files;
 
 %% Preprocessing of datasets
 
@@ -26,18 +25,20 @@ skipped = 0;
 for i = 1:length(files)
     
     % Detect dataset type (paired or unpaired)
-    if contains(files(i).folder, 'unpaired_dataset_art')
+    in_file = files{i};
+    [in_folder, name, ext] = fileparts(in_file);
+    if contains(in_folder, 'unpaired_dataset_art')
         in_base = in_path_unpaired;
         out_base = out_path_unpaired;
-    elseif contains(files(i).folder, 'paired_dataset_art')
+    elseif contains(in_folder, 'paired_dataset_art')
         in_base = in_path_paired;
         out_base = out_path_paired;
     end
 
     % Relative path and output path for each image to be processed
-    rel_path = strrep(files(i).folder, in_base, '');
+    rel_path = strrep(in_folder, in_base, '');
     out_path = fullfile(out_base, rel_path);
-    out_file = fullfile(out_path, files(i).name);
+    out_file = fullfile(out_path, [name, ext]);
 
     % If no such folder exists yet, create it
     if ~exist(out_path, 'dir')
@@ -46,12 +47,8 @@ for i = 1:length(files)
     end
 
     % Read each image
-    in_file = fullfile(files(i).folder, files(i).name);
-    if ~isfile(in_file)
-        continue;
-    end
     try
-        img = imread(in_file);
+        img = readimage(imds, i);
     catch
         skipped = skipped + 1;
         continue;
@@ -151,12 +148,11 @@ title('Correlation between difference features (paired images)');
 %% Statistical analysis on paired features
 
 % Features on R, G, B channels are highly correlated as expected, hence
-% their averages can only be retained; moreover, distance from centroid is 
-% extremely correlated to the energy ratio, as expected, so it can be neglected
+% their averages can only be retained
 Mean_RGB = mean([T_diffs.MeanR, T_diffs.MeanG, T_diffs.MeanB], 2);
 Std_RGB  = mean([T_diffs.StdR,  T_diffs.StdG,  T_diffs.StdB], 2);
 Skew_RGB = mean([T_diffs.SkewR, T_diffs.SkewG, T_diffs.SkewB], 2);
-T_diffs(:, {'DistanceFromCentroid', 'MeanR', 'MeanG', 'MeanB', ...
+T_diffs(:, {'MeanR', 'MeanG', 'MeanB', ...
     'StdR', 'StdG', 'StdB', 'SkewR', 'SkewG', 'SkewB'}) = [];
 T_diffs.Mean_RGB = Mean_RGB;
 T_diffs.Std_RGB = Std_RGB;
@@ -189,6 +185,7 @@ disp('Statistical analysis of difference features'); disp(StatResults);
 
 % Visualise boxplots of the most statistically significant features:
 % spectral variance and average standard deviation of RGB intensities
+figure;
 
 subplot(1, 2, 1);
 boxplot([T_damaged.SpectralVariance, T_undamaged.SpectralVariance], 'Labels', {'Damaged', 'Undamaged'});
@@ -205,8 +202,12 @@ sgtitle('Top Diagnostic Features by Statistical Relevance');
 %% Feature selection and extraction from unpaired dataset
 % Features to be removed basing on correlation matrix and p-value: 
 % GCLM contrast and homogeneity (non-significant and anti-correlated), GCLM
-% energy (non-significant, anti-correlated to entropy), LBP energy and 
-% laplacian variance (non-significant)
+% energy (non-significant, anti-correlated to entropy), laplacian 
+% variance (non-significant), LPB energy and distance from centroid;
+% indeed, LBP energy and distance from centroid are significant but they 
+% would not be if Bonferroni correction were to be considered, and they are
+% respectively strongly anti-correlated to LBP entropy and strongly 
+% correlated to energy ratio (which are both highly significant)
 
 selected_features = {'GLCMcorrelation', 'GlobalEntropy', 'LBPentropy', ...
     'EdgeDensity', 'EnergyRatio', 'SpectralVariance', ...
