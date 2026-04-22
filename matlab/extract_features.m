@@ -27,6 +27,7 @@ function features = extract_features(I)
     % Comparing neighbouring pixels in 3x3 squares for LBP statistics
     % (localised texture features)
     lbp_histogram = extractLBPFeatures(grimg, 'NumNeighbors', 8, 'Radius', 1);
+    lbp_histogram = lbp_histogram / sum(lbp_histogram + eps);
     lbp_energy = sum(lbp_histogram.^2);
     lbp_entropy = -sum(lbp_histogram .* log2(lbp_histogram + eps));
 
@@ -76,9 +77,8 @@ function features = extract_features(I)
     P_log = log10(1 + abs(F).^2); [m,n] = size(P_log);
 
     % Compute maximum spectral variance among 16 patches as well
-    getSpecVar = @(g) var(reshape(log10(1 + abs(fftshift(fft2(g))).^2), [], 1));
-    g_patches = mat2cell(grimg, r_size, c_size);
-    spec_vars = cellfun(getSpecVar, g_patches);
+    p_patches = mat2cell(P_log, r_size, c_size);
+    spec_vars = cellfun(@(p) var(p(:)), p_patches);
     spectral_var_log = max(spec_vars(:));
 
     % Compute how much spectral power is due to high frequency components
