@@ -96,6 +96,7 @@ def run_classification(file_path):
     # Create a unique DataFrame for comparison, with means and deviations of percentage metrics
     all_results = pd.concat(results).drop(columns=['fit_time', 'score_time'])
     summary = all_results.groupby(level=0).agg(['mean', 'std']) * 100
+    summary.columns = [f'{col[0]}_{col[1]}' for col in summary.columns]
     summary = summary.round(2)
     pd.set_option('display.max_columns', None)
     print(f"{output_prefix} MODEL COMPARISON\n", summary)
