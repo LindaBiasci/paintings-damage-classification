@@ -247,9 +247,6 @@ octave-workspace
 *dataset/
 *images/
 
-# Ignore my results (local)
-results/
-
 # Ignore binary data files (MATLAB) and large model checkpoints (Python)
 *.mat
 *.h5

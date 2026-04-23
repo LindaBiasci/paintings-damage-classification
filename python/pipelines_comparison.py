@@ -4,10 +4,16 @@ manual vs deep learning feature extraction."""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+
+RESULTS_DIR = Path("results")
+FILE_M = RESULTS_DIR / "features_manual_metrics.csv"
+FILE_C = RESULTS_DIR / "features_cnn_metrics.csv"
+SAVE_PATH = RESULTS_DIR / "comparison_plot.png"
 
 # Load .csv files obtained from ml_classifier.py
-df_m = pd.read_csv("results/features_manual_metrics.csv", index_col=0)
-df_c = pd.read_csv("results/features_cnn_metrics.csv", index_col=0)
+df_m = pd.read_csv(FILE_M, index_col=0)
+df_c = pd.read_csv(FILE_C, index_col=0)
 
 # Define metrics, bars positions and width
 metrics = ['test_accuracy', 'test_precision', 'test_recall', 'test_f1', 'test_roc_auc']
