@@ -17,7 +17,8 @@ from keras.utils import load_img, img_to_array
 
 # Configuration
 INPUT_FOLDER = Path(
-    "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/project_dataset/processed/unpaired")
+    "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
+    "project_dataset/processed/unpaired")
 OUTPUT_CSV = Path(
     "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
     "paintings-damage-classification/data/extracted_features/features_cnn.csv")
@@ -29,8 +30,7 @@ def extract_image_data(path):
     Args:
         path (Path): Pathlib object pointing to the image file
     Returns:
-        np.array: preprocessed image data (if successful)
-    """
+        np.array: preprocessed image data (if successful)"""
 
     try:
         img = load_img(path, target_size=IMAGE_SIZE)
@@ -51,27 +51,40 @@ def main():
 
     # Find all images in the input folder
     image_paths = list(INPUT_FOLDER.rglob("*.jpg"))
-    print(f"Found {len(image_paths)} images.")
+
     # Load and process each image into a pixel matix, store it and filter out corrupted files
-    x = np.array([data for p in image_paths if (data := extract_image_data(p)) is not None])
+    images = []
+    labels = []
+
+    for p in image_paths:
+        img = extract_image_data(p)
+        if img is None:
+            continue
+
+        label = LABEL_MAP.get(p.parent.name)
+        if label is None:
+            print(f"Unknown label folder: {p.parent.name}")
+            continue
+
+        images.append(img)
+        labels.append(label)
+
+    x = np.array(images, dtype=np.float32)
+    print(f"Found {len(images)} valid images.")
 
     # Actual feature extraction
-    features = model.predict(x)
+    features = model.predict(x, batch_size=32)
     print(f"Original features shape: {features.shape}")
 
     # Apply dimensionality reduction, since ResNet returns 2048 features for 289 samples
     scaled_feats = StandardScaler().fit_transform(features)
-    pca = PCA(n_components=50)
+    pca = PCA(n_components=50, random_state=42)
     reduced_feats = pca.fit_transform(scaled_feats)
     print(f"Reduced features shape: {reduced_feats.shape}")
 
     # Build dataset, i.e. map feature vectors to their correspondent class label
-    df = pd.DataFrame(reduced_feats).add_prefix("pca_feat")
-    df["Label"] = [LABEL_MAP[p.parent.name] for p in image_paths[:len(reduced_feats)]]
-
-    # Check for unmapped labels
-    if df["Label"].isnull().any():
-        print("Warning: some folders did not match the LABEL_MAP")
+    df = pd.DataFrame(reduced_feats, columns=[f"pca_{i}" for i in range(reduced_feats.shape[1])])
+    df["label"] = labels
 
     # Export dataset
     df.to_csv(OUTPUT_CSV, index=False)
