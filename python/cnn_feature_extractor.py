@@ -61,13 +61,13 @@ def main():
         if img is None:
             continue
 
-        label = LABEL_MAP.get(p.parent.name)
-        if label is None:
+        Label = LABEL_MAP.get(p.parent.name)
+        if Label is None:
             print(f"Unknown label folder: {p.parent.name}")
             continue
 
         images.append(img)
-        labels.append(label)
+        labels.append(Label)
 
     x = np.array(images, dtype=np.float32)
     print(f"Found {len(images)} valid images.")
@@ -84,7 +84,7 @@ def main():
 
     # Build dataset, i.e. map feature vectors to their correspondent class label
     df = pd.DataFrame(reduced_feats, columns=[f"pca_{i}" for i in range(reduced_feats.shape[1])])
-    df["label"] = labels
+    df["Label"] = labels
 
     # Export dataset
     df.to_csv(OUTPUT_CSV, index=False)
