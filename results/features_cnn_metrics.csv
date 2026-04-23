@@ -1,4 +1,4 @@
 ,test_accuracy,test_accuracy,test_precision,test_precision,test_recall,test_recall,test_f1,test_f1,test_roc_auc,test_roc_auc
 ,mean,std,mean,std,mean,std,mean,std,mean,std
-RF,78.56,5.03,97.62,6.3,33.91,14.87,48.58,17.2,88.97,3.68
-SVM,87.54,2.21,90.91,6.77,68.45,10.42,77.42,5.54,93.41,1.78
+RF,79.94,5.15,97.14,7.56,38.15,14.94,53.37,16.28,90.04,4.12
+SVM,87.19,2.33,86.19,4.68,71.66,10.78,77.7,5.65,92.95,1.64
