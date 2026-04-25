@@ -23,7 +23,7 @@ OUTPUT_CSV = Path(
     "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
     "paintings-damage-classification/data/extracted_features/features_cnn.csv")
 IMAGE_SIZE = (224, 224)
-LABEL_MAP = {"damaged": 0, "undamaged": 1}
+LABEL_MAP = {"damaged": 1, "undamaged": 0}
 
 def extract_image_data(path):
     """Load and preprocess a single image for ResNet50.
