@@ -87,8 +87,7 @@ def run_classification(file_path):
     # Compute averaged metrics for each model in the dictionary
     results = {
         name: pd.DataFrame(cross_validate(clf, X, y, cv=cval, scoring=metrics))
-        for name, clf in models.items()
-    }
+        for name, clf in models.items()}
 
     roc_path = output_dir / f"{output_prefix}_roc_comparison.png"
     plot_roc_curves(models, X, y, cval, roc_path)
@@ -112,7 +111,7 @@ def run_classification(file_path):
     # Iterate over dictionary's keys to compute and display confusion matrixes
     for i, (name, y_pred) in enumerate(predictions.items()):
         con_mat = confusion_matrix(y, y_pred)
-        disp = ConfusionMatrixDisplay(confusion_matrix=con_mat, display_labels=["Damaged", "Undamaged"])
+        disp = ConfusionMatrixDisplay(confusion_matrix=con_mat, display_labels=["Undamaged", "Damaged"])
         disp.plot(ax=axes[i], cmap='Blues' if i == 0 else 'Greens', colorbar=False)
         axes[i].set_title(f"Confusion Matrix: {name}")
 

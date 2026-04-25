@@ -232,8 +232,8 @@ for i = 1:num_images_u
     
     T_final = T_temp(:, selected_features);
     
-    % Add labels for classification: 1 if undamaged, 0 if damaged
-    T_final.Label = double(contains(unpaired_dataset(i).folder, 'undamaged'));
+    % Add labels for classification: 1 if damaged, 0 if undamaged
+    T_final.Label = double(~contains(unpaired_dataset(i).folder, 'undamaged'));
     all_tables{i} = T_final;
 end
 
