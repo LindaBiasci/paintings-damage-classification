@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 import numpy as np
 import pandas as pd
+import logging
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 # Required before importing Keras modules
@@ -16,6 +17,8 @@ from keras.applications.resnet50 import ResNet50, preprocess_input
 from keras.utils import load_img, img_to_array
 
 # Configuration
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
+
 INPUT_FOLDER = Path(
     "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
     "project_dataset/processed/unpaired")
@@ -37,7 +40,7 @@ def extract_image_data(path):
         # Convert image to array and apply ResNet50 specific preprocessing
         return preprocess_input(img_to_array(img))
     except (OSError, ValueError):
-        print(f"Skipping invalid image: {path.name}")
+        logging.warning(f"Skipping invalid image: {path.name}")
         return None
 
 def main():
@@ -61,26 +64,26 @@ def main():
         if img is None:
             continue
 
-        Label = LABEL_MAP.get(p.parent.name)
-        if Label is None:
-            print(f"Unknown label folder: {p.parent.name}")
+        label = LABEL_MAP.get(p.parent.name)
+        if label is None:
+            logging.warning(f"Unknown label folder: {p.parent.name}")
             continue
 
         images.append(img)
-        labels.append(Label)
+        labels.append(label)
 
     x = np.array(images, dtype=np.float32)
-    print(f"Found {len(images)} valid images.")
+    logging.info(f"Found {len(images)} valid images.")
 
     # Actual feature extraction
     features = model.predict(x, batch_size=32)
-    print(f"Original features shape: {features.shape}")
+    logging.info(f"Original features shape: {features.shape}")
 
     # Apply dimensionality reduction, since ResNet returns 2048 features for 289 samples
     scaled_feats = StandardScaler().fit_transform(features)
     pca = PCA(n_components=50, random_state=42)
     reduced_feats = pca.fit_transform(scaled_feats)
-    print(f"Reduced features shape: {reduced_feats.shape}")
+    logging.info(f"Reduced features shape: {reduced_feats.shape}")
 
     # Build dataset, i.e. map feature vectors to their correspondent class label
     df = pd.DataFrame(reduced_feats, columns=[f"pca_{i}" for i in range(reduced_feats.shape[1])])
@@ -88,7 +91,7 @@ def main():
 
     # Export dataset
     df.to_csv(OUTPUT_CSV, index=False)
-    print(f"Dataset successfully exported to: {OUTPUT_CSV}")
+    logging.info(f"Dataset successfully exported to: {OUTPUT_CSV}")
 
 if __name__ == "__main__":
     main()
