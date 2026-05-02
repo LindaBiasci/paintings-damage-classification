@@ -12,6 +12,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold, cross_validate, cross_val_predict
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, RocCurveDisplay
 
+# Configuration
+INPUT_FOLDER = Path(
+    "C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
+    "paintings-damage-classification")
+DATA_DIR = INPUT_FOLDER / "data" / "extracted_features"
+OUTPUT_DIR = INPUT_FOLDER / "results"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 def plot_roc_curves(models, X, y, cv, save_path):
     """Generate and save a comparison of ROC curves using cross-validated predictions.
     Args:
@@ -53,15 +61,17 @@ def run_classification(file_path):
     Returns: 
         results (pd.DataFrame): a summary table of each model's performance"""
 
-    output_dir = Path("C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
-    "paintings-damage-classification/results")
-    output_dir.mkdir(parents=True, exist_ok=True)
-
     # Load dataset
     path = Path(file_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Could not find dataset in {path}")
-    df = pd.read_csv(path)
+    try:
+        df = pd.read_csv(path)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"Could not find dataset in {path.absolute()}") from exc
+    except pd.errors.ParserError as exc:
+        raise TypeError(f"Non valid cvs file: {path.name}") from exc
+
+    if 'Label' not in df.columns:
+        raise KeyError(f"Missing column 'Label' in {path.name}, check extraction scripts")
     output_prefix = path.stem
 
     # Define and separate features (X) and labels (y)
@@ -89,7 +99,7 @@ def run_classification(file_path):
         name: pd.DataFrame(cross_validate(clf, X, y, cv=cval, scoring=metrics))
         for name, clf in models.items()}
 
-    roc_path = output_dir / f"{output_prefix}_roc_comparison.png"
+    roc_path = OUTPUT_DIR / f"{output_prefix}_roc_comparison.png"
     plot_roc_curves(models, X, y, cval, roc_path)
 
     # Create a unique DataFrame for comparison, with means and deviations of percentage metrics
@@ -99,7 +109,7 @@ def run_classification(file_path):
     summary = summary.round(2)
     pd.set_option('display.max_columns', None)
     print(f"{output_prefix} MODEL COMPARISON\n", summary)
-    summary.to_csv(output_dir / f"{output_prefix}_metrics.csv")
+    summary.to_csv(OUTPUT_DIR / f"{output_prefix}_metrics.csv")
 
     # Compute predictions to calculate confusion matrix
     predictions = {name: cross_val_predict(clf, X, y, cv=cval)
@@ -116,10 +126,10 @@ def run_classification(file_path):
         axes[i].set_title(f"Confusion Matrix: {name}")
 
     plt.tight_layout()
-    plt.savefig(output_dir / f"{output_prefix}_confusion_matrices.png")
+    plt.savefig(OUTPUT_DIR / f"{output_prefix}_confusion_matrices.png")
     plt.show()
 
-# Analyse feature importance in Random Forest
+    # Analyse feature importance in Random Forest
     if "manual" in output_prefix:
         rf_model = models["RF"].fit(X, y)
         importances = rf_model.named_steps['rf'].feature_importances_
@@ -134,7 +144,5 @@ def run_classification(file_path):
     return summary
 
 if __name__ == "__main__":
-    BASE_DIR = Path("C:/Users/linda/Desktop/materiali università/magistrale/Computing methods for experimental physics/" \
-    "paintings-damage-classification/data/extracted_features")
-    run_classification(BASE_DIR / "features_manual.csv")
-    run_classification(BASE_DIR / "features_cnn.csv")
+    run_classification(DATA_DIR / "features_manual.csv")
+    run_classification(DATA_DIR / "features_cnn.csv")
