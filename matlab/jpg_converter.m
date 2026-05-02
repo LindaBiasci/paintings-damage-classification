@@ -34,7 +34,7 @@ for i = 1:length(files)
         converted = converted + 1;
 
     catch err
-        fprintf('Failed to process file %s\n', in_file);
+        fprintf('Failed to process file %s\n', input_pathfile);
         fprintf('Error: %s\n\n', err.message);
         failed = failed + 1;
     end
