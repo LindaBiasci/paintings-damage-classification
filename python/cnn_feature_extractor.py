@@ -6,9 +6,9 @@ corresponding class labels."""
 
 from pathlib import Path
 import os
+import logging
 import numpy as np
 import pandas as pd
-import logging
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 # Required before importing Keras modules
@@ -40,7 +40,7 @@ def extract_image_data(path):
         # Convert image to array and apply ResNet50 specific preprocessing
         return preprocess_input(img_to_array(img))
     except (OSError, ValueError):
-        logging.warning(f"Skipping invalid image: {path.name}")
+        logging.warning("Skipping invalid image: %s", path.name)
         return None
 
 def main():
@@ -66,24 +66,24 @@ def main():
 
         label = LABEL_MAP.get(p.parent.name)
         if label is None:
-            logging.warning(f"Unknown label folder: {p.parent.name}")
+            logging.warning("Unknown label folder: %s", p.parent.name)
             continue
 
         images.append(img)
         labels.append(label)
 
     x = np.array(images, dtype=np.float32)
-    logging.info(f"Found {len(images)} valid images.")
+    logging.info("Found %s valid images.", len(images))
 
     # Actual feature extraction
     features = model.predict(x, batch_size=32)
-    logging.info(f"Original features shape: {features.shape}")
+    logging.info("Original features shape: %s", features.shape)
 
     # Apply dimensionality reduction, since ResNet returns 2048 features for 289 samples
     scaled_feats = StandardScaler().fit_transform(features)
     pca = PCA(n_components=50, random_state=42)
     reduced_feats = pca.fit_transform(scaled_feats)
-    logging.info(f"Reduced features shape: {reduced_feats.shape}")
+    logging.info("Reduced features shape: %s", reduced_feats.shape)
 
     # Build dataset, i.e. map feature vectors to their correspondent class label
     df = pd.DataFrame(reduced_feats, columns=[f"pca_{i}" for i in range(reduced_feats.shape[1])])
@@ -91,7 +91,7 @@ def main():
 
     # Export dataset
     df.to_csv(OUTPUT_CSV, index=False)
-    logging.info(f"Dataset successfully exported to: {OUTPUT_CSV}")
+    logging.info("Dataset successfully exported to: %s", OUTPUT_CSV)
 
 if __name__ == "__main__":
     main()
