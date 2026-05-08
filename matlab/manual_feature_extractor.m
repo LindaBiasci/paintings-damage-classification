@@ -160,17 +160,18 @@ T_diffs.Skew_RGB = Skew_RGB;
 diff_matrix_update = table2array(T_diffs);
 feature_names_update = T_diffs.Properties.VariableNames;
 
-% Lilliefors normality test: if it returns h=0, i.e. p-value > 0.05, 
-% the difference feature can be assumed to be normally distributed
+% Lilliefors normality test: if it returns h=1, i.e. p-value < 0.05, 
+% the difference feature cannot be assumed to be normally distributed
 nonGaussian_distr = zeros(1, length(feature_names_update));
 for i = 1:length(feature_names_update)
     nonGaussian_distr(i) = lillietest(diff_matrix_update(:,i));
 end
 
-% Wilcoxon (non-parametric) test: appropriate significance test for 
-% variabiables which are not normally distributed, if it returns p-value >
-% 0.05, the difference feature can be treated as non-relevant for
-% diagnostics (i.e. the median is approximately null)
+% Wilcoxon signed-rank (non-parametric) test: appropriate significance 
+% test for variables which are not normally distributed, if it returns
+% p-value < 0.05, the difference feature might be considered statistically 
+% relevant for diagnostics (i.e. it does not show a median significantly 
+% different from zero)
 p_values = zeros(1, length(feature_names_update));
 for i = 1:length(feature_names_update)
     p_values(i) = signrank(diff_matrix_update(:,i));

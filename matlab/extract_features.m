@@ -110,7 +110,7 @@ function features = extract_features(I)
    
     clr_feat = [mean(tR(:)), mean(tG(:)), mean(tB(:)), ...
         std(double(tR(:))), std(double(tG(:))), std(double(tB(:))), ...
-        skewness(double(tR(:))), skewness(double(tG(:))), skewness(double(tB(:))),];
+        skewness(double(tR(:))), skewness(double(tG(:))), skewness(double(tB(:)))];
 
     % Combine all extracted features into a single feature vector
     features = [text_feat, edge_density, lap_var, fft_feat, clr_feat];
