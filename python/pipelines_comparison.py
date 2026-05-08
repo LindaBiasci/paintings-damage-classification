@@ -15,7 +15,7 @@ SAVE_PATH = RESULTS_DIR / "comparison_plot.png"
 df_m = pd.read_csv(FILE_M, index_col=0)
 df_c = pd.read_csv(FILE_C, index_col=0)
 
-# Define metrics, bars positions and width
+# Define metrics, bars positions (x) and bars width 
 metrics = ['test_accuracy', 'test_precision', 'test_recall', 'test_f1', 'test_roc_auc']
 labels = ['Accuracy', 'Precision', 'Recall', 'F1', 'ROC AUC']
 x = np.arange(len(labels))
